@@ -5,3 +5,7 @@
 *.class
 *.jvs
 **/bin/
+out*
+*.out
+*.out.*
+seed
