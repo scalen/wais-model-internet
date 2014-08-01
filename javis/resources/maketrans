@@ -1,0 +1,4 @@
+#!/bin/sh
+echo Makeing $1.gif transparent
+giftrans -t "#0000f8" -T -o $1.gif2 $1.gif
+mv $1.gif2 $1.gif

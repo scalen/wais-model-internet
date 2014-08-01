@@ -1,0 +1,23 @@
+
+- Link bandwidth only accepted if specified in floating point, no "mb" 
+  appendix, etc. same for delay, only floating point, no "ms". If it's
+  urgent, edit the file by hand to convert to floating point.
+
+- Threads do not get joined when they terminate most of the time. This is
+  because it's tedious to do and might well be left out of the prototype
+  (no problem, but creates a memory leak)
+
+- Autolayout will not centre correctly anymore if the screen is resized
+
+- Orientations and angles (i.e. manual layout) specified in trace files are 
+  being ignored.
+
+- The drawing routine determines the font width every time, making it
+  slow
+
+- Redo button causes an exception when pressed without a file loaded
+
+- In X-windows, some window managers will provide the top position of the 
+  window starting from the title bar, some will provide the position of the
+  actual content, thus the debug console might be shifted up sometimes by
+  exactly the height of the title bar..

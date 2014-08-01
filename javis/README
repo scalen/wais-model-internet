@@ -1,0 +1,67 @@
+
+------------------------------------------------------------------------
+				Javis 0.2
+------------------------------------------------------------------------
+(c)1998/99 Denis Hanson, Christian Nentwich, Aleksandar Nikolic, Steven
+Vischer.
+THIS SOFTWARE IS PROTECTED UNDER TERMS OF THE GNU GENERAL PUBLIC LICENSE.
+PLEASE REFER TO THE ENCLOSED FILE 'COPYING' FOR THE EXACT TERMS.
+
+This is version 0.2 of Javis, quite probably the final version. What you
+have in this package is the complete Java source code.
+
+Requirements:
+	- JDK 1.1.7
+	- Swing 1.0.3
+
+The previous two have to be in your classpath prior to compiling Javis. If 
+you just require the applet version then you do not need swing.
+
+NOTE: If you have the JDK 1.2, it is easy enough to port Javis to that if
+you want to put some effort in: All you have to do is rename all 'include'
+statements from
+    include com.sun.java.awt.swing;
+to
+    include javax.swing;
+Only the swing classes in the iface/ package contain such include
+statements.
+
+
+Running Javis (Standalone)
+--------------------------
+
+You need to compile Javis before running it. Assuming that your classpath is
+set correctly, you can simply type:
+
+	javac Main.java
+
+After the compilation, type
+
+	java Main
+
+
+Running Javis (Applet)
+----------------------
+
+There are two steps involved in running the applet: Compiling Javis and
+setting up a web page to contain the Javis applet.
+
+Compile the applet version of Javis by typing:
+
+	javac MainApplet.java
+
+You can now create a HTML page that refers to the MainApplet class and pass
+it the required parameters (trace file, etc.). It is easiest to look at the
+applet_example.html provided for the details. Note the following:
+ 
+        1) All the class files have to be installed in their correct paths,
+	i.e. you should copy the whole directory structure when putting
+        Javis in your web directory. You can then get rid of the .java files
+        because they are not needed anymore (but the resources/ directory 
+        is!)
+
+        2) Take care to get the access permissions right. Web servers are
+	very pedantic!
+
+
+Have fun using Javis..

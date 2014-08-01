@@ -1,0 +1,111 @@
+28/01/2006 (gabi kliot):
+  - fileio.event.NodeEvent - added support for exact coordinates
+  - fileio.event.GroupEvent - compilation problem
+  - animation.Scheduler  - added support for exact layout
+  - iface.Swing*. - compilation problems
+  - animation.layout.ExactLayoutManager - added support for exact layout
+
+
+23/04/1999 (chris):
+  - Lots and lots of commenting
+  - Added 'seek' functionality.
+  - Added 'arrowheads' to packets in order to be able to distinguish packets  
+    that are sent back-to-back from one big packet.
+  - Fixed link colouring. Broken links are drawn red now.
+  - Updated the applet accordingly
+
+22/04/1999 (chris):
+  - Merged with Steve's modifications
+  - Lots of smaller bugfixes (e.g. queues get deleted when new files are
+    loaded)
+  - Added a proper animation for dropping packets. Packets rotate now.
+  - Implemented proper packet length routine (rather than hardcode).
+    Blatantly ripped it from the NAM source (it did require some adjustment
+    though).
+
+21/04/1999 (chris):
+  - Finished the Preferences dialog. Values get saved.
+
+15/04/1999 (chris):
+  - Merged with steve's changes. got queuing and text events now, joy..
+  - Added packet colouring. Packets are coloured according to the
+    conversation ID now.
+
+14/04/1999 (chris):
+  - Added the 'shake' function, finally.. It actually comes in quite handy
+    if the autolayout messes up the layout (for straight-line type networks)
+  - Activated both the 'tension' and the 'iteration' text field in the swing
+    interface. Tip of the day: Try tension=40 with test.jvs.gz, looks better
+    IMHO.
+  - Updated the applet: Added tension and iteration fields and activated all
+    of the things described above.
+  - Applet: Renamed "FFWD" to "Forward" ..
+
+04/04/1999 (chris):
+  - Back from JNS for a bit, implemented Queue handling so Steven can do the
+    rest tomorrow.
+  - Added queue.nam.gz for testing queue behaviour.. You should be able to
+    observe a queue after about 1,2 seconds at node 2 (that is, after we've
+    implemented it.. ;)
+
+01/03/1999 (chris):
+  - I'm a bit knackered from coding on JNS, but I've added the about dialog
+    so that's out of the TODO list. I might make it more fancy later.
+
+28/02/1999 (chris):
+  - Colour handling is back in. Things get displayed now but I had to take
+    out double buffering from the applet. The colour database can be loaded
+    over a network now
+  - OOPS.. 1:30 am .. double buffering is back in, the applet seems to work
+    fine. Have a drink on me.. I'll try it in Netscape now.
+  - Ok, it looks like Netscape just went to its knees. The applet works but
+    Netscape starts behaving like a monkey on sedatives, it even stops 
+    displaying its buttons. There seem to be threading problems. JIT
+    compiler in Navigator.. hmm..
+  - Fixed the time-reset bug. Time gets set to 0 when loading a new file
+    now.
+  - Created a seek icon "seek.gif" to go with the lovely new seek button
+  - Redrew the old and ugly "stop" and "play" icons. The whole interface is
+    self-made now.
+  - Contributed the compare-cvs script from my graphics library..
+
+27/02/1999 (chris):
+  - Packet drawing is back, but not quite complete.. I have to rething it
+    a bit. In any case, you get some nice boxes drawn now :)
+  - Reading in the '-S' flag in packet events now.. have to look up what it
+    actually does.
+  - The applet is loading now and it is even loading the trace file. I had
+    to disable the colour class as it was trying to load the database.. 
+    nothing on the screen yet
+
+25/02/1999 (chris):
+  - Included Denis' preferences loading / saving stuff, seems to work fine..
+  - Totally broke the packet drawing :)
+
+24/02/1999 (denis):
+  - Wrote the preferences loading / saving
+
+24/02/1999 (chris):
+  - Messed around with the applet code a bit, it refuses to load in Netscape
+  - Denis wrote Preferences loading / saving, not incorporated yet..
+  - Added gzipped file reading and loading files over a network (recognises
+    http:// in the filename)
+
+22/02/1999 (chris):
+  - Added the 'debug console', no more stdout debug messages. A couple of
+    new icons to go with it
+  - Removed the reverse play button and rewind button
+  - Fixed the time increment slider (finally!) It uses a scale of 10^x now,
+    which is exactly what NAM does
+
+[BREAK]
+
+08/12/1998:
+  - Changed the panel interfacing structure, everything has been
+    abstracted and the swing and applet interface can be exchanged
+    transparently.
+  - Created the applet interface (looks horrible :)
+  - index.html to test the applet
+
+07/12/1998:
+  - First checkin, swing interface working
