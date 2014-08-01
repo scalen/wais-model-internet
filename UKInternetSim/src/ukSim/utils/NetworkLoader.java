@@ -69,7 +69,7 @@ public class NetworkLoader {
 			}
 			
 			return sch;
-		} catch (Exception e) {
+		} catch (IOException e) {
 			throw e;
 		} finally {
 			if (fileReader != null){
