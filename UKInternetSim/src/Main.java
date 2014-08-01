@@ -16,8 +16,10 @@ public class Main {
 			for (Element e = elements.nextElement(); elements.hasMoreElements(); e = elements.nextElement()){
 				if (e instanceof Node){
 					Node n = (Node) e;
-					n.dump();
-					System.out.println("-----------------------------");
+					if (n.getIPHandler().getInterfaceCount() > 2){
+						n.dump();
+						System.out.println("-----------------------------");
+					}
 				}
 			}
 		} catch (IOException e) {

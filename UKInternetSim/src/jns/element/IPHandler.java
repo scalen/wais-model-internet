@@ -122,6 +122,10 @@ public class IPHandler extends Element implements CL_Agent
         else
             return null;
     }
+    
+    public int getInterfaceCount(){
+    	return m_interfaces.size();
+    }
 
 
     /**
