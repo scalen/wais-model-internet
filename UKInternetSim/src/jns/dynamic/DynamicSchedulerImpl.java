@@ -241,11 +241,11 @@ public class DynamicSchedulerImpl extends UnicastRemoteObject implements Dynamic
      * one node to the other. The sending is scheduled to happen at
      * (System.currentTimeMillis() - Time of start of simulator)
      */
-    public synchronized void scheduleUnicast(InetAddress senderIPAddress, InetAddress receiverIPAddress, byte[] data) throws RemoteException
+    public synchronized void scheduleUnicast(IPAddr nodeA, IPAddr nodeB, byte[] data) throws RemoteException
     {
 
-        IPAddr senderIPAddr = new IPAddr(senderIPAddress);
-        IPAddr receiverIPAddr = new IPAddr(receiverIPAddress);
+        IPAddr senderIPAddr = new IPAddr(nodeA);
+        IPAddr receiverIPAddr = new IPAddr(nodeB);
 
         // Firsy check that the two nodes exist in the simulator..
         Node sender = (Node) m_nodes.get(senderIPAddr.toString());
