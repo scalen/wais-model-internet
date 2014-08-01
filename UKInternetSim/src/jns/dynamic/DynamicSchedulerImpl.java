@@ -24,16 +24,13 @@ import jns.util.Protocols;
 import jns.util.Queue;
 
 import java.io.IOException;
-import java.net.DatagramPacket;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
-import java.util.Enumeration;
-import java.util.Set;
+import java.util.List;
 
 /**
  * This is the main class used to dynamically schedule events to the JNS
@@ -160,6 +157,11 @@ public class DynamicSchedulerImpl extends UnicastRemoteObject implements Dynamic
             System.err.println("Can't add nodes after the simulation has started..");
             return;
         }
+        if (m_nodes.containsKey(IPAddress)){
+//        	System.err.println("Simulation already contains node with IP: " + IPAddress.toString());
+        	return;
+        }
+        
         //Create the node
         Node node = new Node(IPAddress.toString());
         //Attach to the simulator
@@ -186,8 +188,20 @@ public class DynamicSchedulerImpl extends UnicastRemoteObject implements Dynamic
      */
     public void addLink(IPAddr nodeA, IPAddr nodeB)
     {
-
-        String linkName = nodeA.toString() + "-" + nodeB.toString();
+    	addLinkInTrace(nodeA, nodeB, null, null);
+    }
+    
+    /**
+     * Adds a link between the two nodes. Beware that this is a
+     * two way link, so there is no need to add a link "the other way"
+     * This method can currently not be called remotely
+     *
+     * @param nodeA The IP address of the first node to connect
+     * @param nodeB The IP address of the second node to connect
+     */
+    public void addLinkInTrace(IPAddr nodeA, IPAddr nodeB, List<IPAddr> forwardIPs, List<IPAddr> backwardIPs)
+    {
+    	String linkName = nodeA.toString() + "-" + nodeB.toString();
         String invLinkName = nodeB.toString() + "-" + nodeA.toString();
         Node a = (Node) m_nodes.get(nodeA.toString());
         Node b = (Node) m_nodes.get(nodeB.toString());
@@ -202,7 +216,7 @@ public class DynamicSchedulerImpl extends UnicastRemoteObject implements Dynamic
         //Now check that the link does not already exist.
         if(m_links.get(linkName) != null || m_links.get(invLinkName) != null)
         {
-            System.err.println("Duplicate link: " + linkName + ". Link not added.");
+//            System.err.println("Duplicate link: " + linkName + ". Link not added.");
             return;
         }
 
@@ -231,8 +245,19 @@ public class DynamicSchedulerImpl extends UnicastRemoteObject implements Dynamic
         //And finally add route between the two.
         a.addRoute(nodeB, m_subnetMask, a2b);
         b.addRoute(nodeA, m_subnetMask, b2a);
-
-
+        
+        if (forwardIPs != null){
+	        for (IPAddr forwardIP : forwardIPs){
+//System.out.println(destination.toString() + "-->>" + forwardIPs.get(n).toString());
+				a.addRoute(forwardIP, m_subnetMask, a2b);
+			}
+        }
+        if (backwardIPs != null){
+			for (IPAddr backwardIP : backwardIPs){
+//System.out.println(source.toString() + "-->>" + forwardIPs.get(n).toString());
+				b.addRoute(backwardIP, m_subnetMask, b2a);
+			}
+        }
     }
 
 

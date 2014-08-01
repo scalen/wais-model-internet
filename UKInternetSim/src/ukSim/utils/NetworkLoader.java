@@ -5,15 +5,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import jns.Simulator;
-import jns.element.DuplexInterface;
-import jns.element.DuplexLink;
-import jns.element.Interface;
-import jns.element.Link;
+import jns.dynamic.DynamicScheduler;
+import jns.dynamic.DynamicSchedulerImpl;
 import jns.element.Node;
 import jns.util.IPAddr;
 
@@ -21,8 +18,9 @@ public class NetworkLoader {
 
 	private static final int DEFAULT_BANDWIDTH = 1000000;
 	private static final double DEFAULT_DELAY = 0.01;
+	private static final double DEFAULT_ERROR_RATE = 0.01;
 
-	public static Simulator loadNetworkFromLinksFile(String filename) throws IOException{
+	public static DynamicSchedulerImpl loadNetworkFromLinksFile(String filename, String traceName) throws IOException{
 		BufferedReader fileReader = null;
 		try {
 			Simulator sim = Simulator.getInstance();
@@ -30,20 +28,16 @@ public class NetworkLoader {
 			InputStreamReader isr = new InputStreamReader(is);
 			fileReader = new BufferedReader(isr);
 			
-			
-			Map<IPAddr, Node> nodes = new HashMap<IPAddr, Node>();
-			Map<UnorderedPair<IPAddr>, Link> links = new HashMap<UnorderedPair<IPAddr>, Link>();
+			DynamicSchedulerImpl sch = new DynamicSchedulerImpl(traceName, DEFAULT_BANDWIDTH, DEFAULT_DELAY, DEFAULT_ERROR_RATE, new IPAddr(0,0,0,0));
 			
 			String line;
 			while ((line = fileReader.readLine()) != null){
-//System.out.println(line);
-				
 				String[] ips = line.split(",");
 				
 				List<IPAddr> forwardIPs = new ArrayList<IPAddr>();
+				List<IPAddr> backwardIPs = new ArrayList<IPAddr>();
 				
 				for (int i = 0; i < ips.length - 1; i++){
-//System.out.println(ips[i]);
 					String[] ipParts = ips[i].split("\\.");
 					
 					IPAddr ip = new IPAddr(
@@ -54,58 +48,24 @@ public class NetworkLoader {
 					);
 					
 					forwardIPs.add(ip);
+					sch.addNode(ip);
 				}
 				
-				for (int i = 0; i < forwardIPs.size() - 1; i++){
-					IPAddr sIP = forwardIPs.get(i);
-					IPAddr dIP = forwardIPs.get(i + 1);
-//System.out.println(sIP.toString() + "->" + dIP.toString());
-					UnorderedPair<IPAddr> pair = new UnorderedPair<IPAddr>(sIP,dIP);
-					
-					Node sNode = getNodeForIPAddress(sIP, nodes),
-						dNode = getNodeForIPAddress(dIP, nodes);
-					
-					Interface source = null, destination = null;
-					if (links.containsKey(pair)){
-						Link link = links.get(pair);
-						
-						if (link.getIncomingInterface().getIPAddr().equals(sIP)){
-							source = link.getIncomingInterface();
-							destination = link.getOutgoingInterface();
-						} else {
-							destination = link.getIncomingInterface();
-							source = link.getOutgoingInterface();
-						}
-					} else {
-						source = new DuplexInterface(sIP, DEFAULT_BANDWIDTH);
-						sNode.attach(source);
-						sim.attach(source);
-						
-						destination = new DuplexInterface(dIP, DEFAULT_BANDWIDTH);
-						dNode.attach(destination);
-						sim.attach(destination);
-						
-						Link link = new DuplexLink(DEFAULT_BANDWIDTH,DEFAULT_DELAY);
-						// first interface attached is incoming, second is outgoing, implicitly
-						source.attach(link, false);
-						destination.attach(link, false);
-						sim.attach(link);
-						
-						links.put(pair, link);
+				IPAddr destination = forwardIPs.remove(0),
+					   source = null;
+				while (!forwardIPs.isEmpty()){
+					if (source != null){
+						backwardIPs.add(source);
 					}
 					
-					for (int n = 0; n < i; n++){
-//System.out.println(destination.toString() + "-->>" + forwardIPs.get(n).toString());
-						dNode.addRoute(forwardIPs.get(n), new IPAddr(0,0,0,0), destination);
-					}
-					for (int n = i + 2; n < forwardIPs.size(); n++){
-//System.out.println(source.toString() + "-->>" + forwardIPs.get(n).toString());
-						sNode.addRoute(forwardIPs.get(n), new IPAddr(0,0,0,0), source);
-					}
+					source = destination;
+					destination = forwardIPs.remove(0);
+					
+					sch.addLinkInTrace(source, destination, forwardIPs, backwardIPs);
 				}
 			}
 			
-			return sim;
+			return sch;
 		} catch (Exception e) {
 			throw e;
 		} finally {

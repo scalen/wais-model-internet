@@ -10,7 +10,6 @@ package jns.dynamic;
 
 import java.rmi.RemoteException;
 import java.rmi.Remote;
-import java.net.DatagramPacket;
 import java.net.InetAddress;
 
 public interface DynamicScheduler extends Remote
