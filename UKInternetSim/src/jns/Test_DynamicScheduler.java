@@ -70,6 +70,17 @@ public class Test_DynamicScheduler
         sch.stop();
 
     }
+    
+    public abstract class Data{
+    	private String data;
+    	public void setData(String file){
+    		data = file;
+    	}
+    	
+    	public String getData(){
+    		return data;
+    	}
+    }
 
 
 }
