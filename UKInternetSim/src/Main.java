@@ -27,17 +27,19 @@ public class Main {
 			Map<Integer, Collection<Node>> cardMap = new HashMap<Integer, Collection<Node>>();
 			
 			Enumeration<Element> elements = Simulator.getInstance().enumerateElements();
-			for (Element e = elements.nextElement(); elements.hasMoreElements(); e = elements.nextElement()){
-				if (e instanceof Node){
-					Node n = (Node) e;
-					Collection<Node> list;
-					if (cardMap.containsKey(n.getIPHandler().getInterfaceCount())){
-						list = cardMap.get(n.getIPHandler().getInterfaceCount());
-					} else {
-						list = new ArrayList<Node>();
-						cardMap.put(n.getIPHandler().getInterfaceCount(), list);
+			if (elements.hasMoreElements()){
+				for (Element e = elements.nextElement(); elements.hasMoreElements(); e = elements.nextElement()){
+					if (e instanceof Node){
+						Node n = (Node) e;
+						Collection<Node> list;
+						if (cardMap.containsKey(n.getIPHandler().getInterfaceCount())){
+							list = cardMap.get(n.getIPHandler().getInterfaceCount());
+						} else {
+							list = new ArrayList<Node>();
+							cardMap.put(n.getIPHandler().getInterfaceCount(), list);
+						}
+						list.add(n);
 					}
-					list.add(n);
 				}
 			}
 			SortedSet<Integer> ss = new TreeSet<Integer>();

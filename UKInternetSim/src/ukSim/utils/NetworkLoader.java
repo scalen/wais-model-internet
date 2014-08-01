@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 
 import jns.Simulator;
-import jns.dynamic.DynamicScheduler;
 import jns.dynamic.DynamicSchedulerImpl;
 import jns.element.Node;
 import jns.util.IPAddr;
@@ -33,11 +32,15 @@ public class NetworkLoader {
 			String line;
 			while ((line = fileReader.readLine()) != null){
 				String[] ips = line.split(",");
+
+				if (ips.length < 2){
+					continue;
+				}
 				
 				List<IPAddr> forwardIPs = new ArrayList<IPAddr>();
 				List<IPAddr> backwardIPs = new ArrayList<IPAddr>();
 				
-				for (int i = 0; i < ips.length - 1; i++){
+				for (int i = 0; i < ips.length; i++){
 					String[] ipParts = ips[i].split("\\.");
 					
 					IPAddr ip = new IPAddr(
