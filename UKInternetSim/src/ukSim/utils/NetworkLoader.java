@@ -106,7 +106,7 @@ public class NetworkLoader {
 			}
 			
 			return sim;
-		} catch (Exception e) {
+		} catch (IOException e) {
 			throw e;
 		} finally {
 			if (fileReader != null){
