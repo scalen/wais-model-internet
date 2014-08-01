@@ -1,29 +1,69 @@
 import java.io.IOException;
+import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import ukSim.utils.NetworkLoader;
 import jns.Simulator;
+import jns.dynamic.DynamicScheduler;
+import jns.dynamic.DynamicSchedulerImpl;
 import jns.element.Element;
 import jns.element.Node;
+import jns.util.IPAddr;
 
 public class Main {
 
 	public static void main(String[] args) {
-		Simulator sim;
+		DynamicSchedulerImpl sch = null;
 		try {
-			sim = NetworkLoader.loadNetworkFromLinksFile("routes.txt");
-			Enumeration<Element> elements = sim.enumerateElements();
+			sch = NetworkLoader.loadNetworkFromLinksFile("uk-routes.txt", "baseTrace");
+			sch.start();
+			
+			Map<Integer, Collection<Node>> cardMap = new HashMap<Integer, Collection<Node>>();
+			
+			Enumeration<Element> elements = Simulator.getInstance().enumerateElements();
 			for (Element e = elements.nextElement(); elements.hasMoreElements(); e = elements.nextElement()){
 				if (e instanceof Node){
 					Node n = (Node) e;
-					if (n.getIPHandler().getInterfaceCount() > 2){
-						n.dump();
-						System.out.println("-----------------------------");
+					Collection<Node> list;
+					if (cardMap.containsKey(n.getIPHandler().getInterfaceCount())){
+						list = cardMap.get(n.getIPHandler().getInterfaceCount());
+					} else {
+						list = new ArrayList<Node>();
+						cardMap.put(n.getIPHandler().getInterfaceCount(), list);
+					}
+					list.add(n);
+				}
+			}
+			SortedSet<Integer> ss = new TreeSet<Integer>();
+			ss.addAll(cardMap.keySet());
+			for (int card : ss){
+				System.out.println("--- CARDINALITY "+ card + " ---");
+				for (Node n : cardMap.get(card)){
+					IPAddr address = n.getIPHandler().getAddress();
+					if (address != null){
+						System.out.println(address.toString());
 					}
 				}
 			}
+			for (int card : ss){
+				System.out.println("CARDINALITY "+ card + ", COUNT: " + cardMap.get(card).size());
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
+		} finally {
+			if (sch != null){
+				try {
+					sch.stop();
+				} catch (RemoteException e) {
+					e.printStackTrace();
+				}
+			}
 		}
 //
 //	    Node src=new Node("Source node");
