@@ -21,7 +21,7 @@ public class Main {
 	public static void main(String[] args) {
 		DynamicSchedulerImpl sch = null;
 		try {
-			sch = NetworkLoader.loadNetworkFromLinksFile("uk-routes.txt", "baseTrace");
+			sch = NetworkLoader.loadNetworkFromLinksFile("routes.txt", "baseTrace");
 			
 			Map<Integer, Collection<Node>> cardMap = new HashMap<Integer, Collection<Node>>();
 			
