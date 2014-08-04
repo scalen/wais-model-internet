@@ -29,6 +29,7 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
@@ -157,7 +158,7 @@ public class DynamicSchedulerImpl extends UnicastRemoteObject implements Dynamic
             System.err.println("Can't add nodes after the simulation has started..");
             return;
         }
-        if (m_nodes.containsKey(IPAddress)){
+        if (m_nodes.containsKey(IPAddress.toString())){
 //        	System.err.println("Simulation already contains node with IP: " + IPAddress.toString());
         	return;
         }
@@ -199,7 +200,7 @@ public class DynamicSchedulerImpl extends UnicastRemoteObject implements Dynamic
      * @param nodeA The IP address of the first node to connect
      * @param nodeB The IP address of the second node to connect
      */
-    public void addLinkInTrace(IPAddr nodeA, IPAddr nodeB, List<IPAddr> forwardIPs, List<IPAddr> backwardIPs)
+    public void addLinkInTrace(IPAddr nodeA, IPAddr nodeB, Collection<IPAddr> forwardIPs, Collection<IPAddr> backwardIPs)
     {
     	String linkName = nodeA.toString() + "-" + nodeB.toString();
         String invLinkName = nodeB.toString() + "-" + nodeA.toString();

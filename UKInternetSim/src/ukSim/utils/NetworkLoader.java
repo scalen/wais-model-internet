@@ -4,9 +4,11 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 
 import jns.Simulator;
 import jns.dynamic.DynamicSchedulerImpl;
@@ -37,8 +39,8 @@ public class NetworkLoader {
 					continue;
 				}
 				
-				List<IPAddr> forwardIPs = new ArrayList<IPAddr>();
-				List<IPAddr> backwardIPs = new ArrayList<IPAddr>();
+				Queue<IPAddr> forwardIPs = new ArrayDeque<IPAddr>();
+				Queue<IPAddr> backwardIPs = new ArrayDeque<IPAddr>();
 				
 				for (int i = 0; i < ips.length; i++){
 					String[] ipParts = ips[i].split("\\.");
@@ -50,19 +52,19 @@ public class NetworkLoader {
 					 		Integer.parseInt(ipParts[3])
 					);
 					
-					forwardIPs.add(ip);
+					forwardIPs.offer(ip);
 					sch.addNode(ip);
 				}
 				
-				IPAddr destination = forwardIPs.remove(0),
+				IPAddr destination = forwardIPs.poll(),
 					   source = null;
 				while (!forwardIPs.isEmpty()){
 					if (source != null){
-						backwardIPs.add(source);
+						backwardIPs.offer(source);
 					}
 					
 					source = destination;
-					destination = forwardIPs.remove(0);
+					destination = forwardIPs.poll();
 					
 					sch.addLinkInTrace(source, destination, forwardIPs, backwardIPs);
 				}

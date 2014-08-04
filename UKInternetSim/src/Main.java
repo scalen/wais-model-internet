@@ -48,7 +48,9 @@ public class Main {
 				System.out.println("--- CARDINALITY "+ card + " ---");
 				for (Node n : cardMap.get(card)){
 					IPAddr address = n.getIPHandler().getAddress();
-					if (address != null){
+					if (address == null){
+						n.dump();
+					} else {
 						System.out.println(address.toString());
 					}
 				}
