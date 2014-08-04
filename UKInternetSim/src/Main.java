@@ -8,9 +8,9 @@ import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import ukSim.utils.AssignProtocols;
 import ukSim.utils.NetworkLoader;
 import jns.Simulator;
-import jns.dynamic.DynamicScheduler;
 import jns.dynamic.DynamicSchedulerImpl;
 import jns.element.Element;
 import jns.element.Node;
@@ -51,13 +51,19 @@ public class Main {
 					if (address == null){
 						n.dump();
 					} else {
-						System.out.println(address.toString());
+						System.out.println(n.getNumber() + " " + address.toString());
 					}
 				}
 			}
 			for (int card : ss){
 				System.out.println("CARDINALITY "+ card + ", COUNT: " + cardMap.get(card).size());
 			}
+			sch.start();
+			AssignProtocols ap = new AssignProtocols();
+			Node src = ap.getNodeByID("201.196.75.45");
+			Node dest = ap.getNodeByID("10.39.155.45");
+			ap.sendPacket(src, dest);
+			
 		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
