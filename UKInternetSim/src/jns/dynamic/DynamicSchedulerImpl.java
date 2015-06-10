@@ -29,9 +29,15 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 /**
  * This is the main class used to dynamically schedule events to the JNS
@@ -68,12 +74,12 @@ public class DynamicSchedulerImpl extends UnicastRemoteObject implements Dynamic
      * This is a hashmap of message queues mapped onto the IP address of the
      * node which sent it.
      */
-    private HashMap m_msgQueues = null;
+    private HashMap<String, Queue> m_msgQueues = null;
 
     /**
      * This is a hashmap of the nodes in the simulator
      */
-    private HashMap m_nodes = null;
+    private HashMap<String, Node> m_nodes = null;
 
     /**
      * The bandwidth of the links in this simulation
@@ -93,7 +99,22 @@ public class DynamicSchedulerImpl extends UnicastRemoteObject implements Dynamic
     /**
      * This holds a hashmap of all the links created.
      */
-    private HashMap m_links = null;
+    private HashMap<String, Link> m_links = null;
+    
+    /**
+     * This holds a hashmap of all nodes to the subnets they are part of.
+     */
+    private HashMap<String,Set<Link>> m_nodesubnets = null;
+    
+    /**
+     * This holds a list of all subnets.
+     */
+    private ArrayList<Set<Link>> m_subnets = null;
+    
+    /**
+     * This holds a lists of all nodes in the subnet of the same list index above.
+     */
+    private ArrayList<Set<String>> m_subnetMembers = null;
 
     /**
      * This is the subnet mask used.
@@ -135,12 +156,15 @@ public class DynamicSchedulerImpl extends UnicastRemoteObject implements Dynamic
             System.exit(-1);
         }
         m_simulator.setTrace(m_trace);
-        m_msgQueues = new HashMap();
-        m_nodes = new HashMap();
+        m_msgQueues = new HashMap<String, Queue>();
+        m_nodes = new HashMap<String, Node>();
         m_bandwidth = linkBandwidth;
         m_delay = linkDelay;
         m_errorRate = linkErrorRate;
-        m_links = new HashMap();
+        m_links = new HashMap<String, Link>();
+        m_nodesubnets = new HashMap<String, Set<Link>>();
+        m_subnets = new ArrayList<Set<Link>>();
+        m_subnetMembers = new ArrayList<Set<String>>();
         m_subnetMask = subnetMask;
 
 
@@ -165,8 +189,8 @@ public class DynamicSchedulerImpl extends UnicastRemoteObject implements Dynamic
         
         //Create the node
         Node node = new Node(IPAddress.toString());
-        //Attach to the simulator
-        m_simulator.attachWithTrace(node, m_trace);
+        //Attach to the simulator - dlm - REMOVED TO ALLOW ADDITION OF LARGEST CONNECTED GRAPH ONLY
+//        m_simulator.attachWithTrace(node, m_trace);
         //Create a queue of messages destined for the external node
         Queue incoming = new Queue();
         //Add the queue to the hashmap of incoming quueues
@@ -189,7 +213,7 @@ public class DynamicSchedulerImpl extends UnicastRemoteObject implements Dynamic
      */
     public void addLink(IPAddr nodeA, IPAddr nodeB)
     {
-    	addLinkInTrace(nodeA, nodeB, null, null);
+    	addLinkInChain(nodeA, nodeB, null, null);
     }
     
     /**
@@ -200,12 +224,13 @@ public class DynamicSchedulerImpl extends UnicastRemoteObject implements Dynamic
      * @param nodeA The IP address of the first node to connect
      * @param nodeB The IP address of the second node to connect
      */
-    public void addLinkInTrace(IPAddr nodeA, IPAddr nodeB, Collection<IPAddr> forwardIPs, Collection<IPAddr> backwardIPs)
+    private int notifyCount = 100;
+    public void addLinkInChain(IPAddr nodeA, IPAddr nodeB, Collection<IPAddr> forwardIPs, Collection<IPAddr> backwardIPs)
     {
     	String linkName = nodeA.toString() + "-" + nodeB.toString();
         String invLinkName = nodeB.toString() + "-" + nodeA.toString();
-        Node a = (Node) m_nodes.get(nodeA.toString());
-        Node b = (Node) m_nodes.get(nodeB.toString());
+        Node a = m_nodes.get(nodeA.toString());
+        Node b = m_nodes.get(nodeB.toString());
 
         //First check that the nodes are there
         if(a == null || b == null)
@@ -224,11 +249,13 @@ public class DynamicSchedulerImpl extends UnicastRemoteObject implements Dynamic
         //Need to create an interface on either node.
         Interface a2b = new DuplexInterface(nodeA);
         a.attach(a2b);
-        m_simulator.attachWithTrace(a2b, m_trace);
+        // REMOVED TO BE ATTACHED ONLY AS PART OF LARGEST CONNECTED GRAPH
+//        m_simulator.attachWithTrace(a2b, m_trace);
 
         Interface b2a = new DuplexInterface(nodeB);
         b.attach(b2a);
-        m_simulator.attachWithTrace(b2a, m_trace);
+     // REMOVED TO BE ATTACHED ONLY AS PART OF LARGEST CONNECTED GRAPH
+//        m_simulator.attachWithTrace(b2a, m_trace);
 
         //Then create the link
         Link link = new DuplexLink(m_bandwidth, m_delay, m_errorRate);
@@ -237,11 +264,40 @@ public class DynamicSchedulerImpl extends UnicastRemoteObject implements Dynamic
         a2b.attach(link, true);
         b2a.attach(link, true);
 
-        //attach the link to the simulator
-        m_simulator.attachWithTrace(link, m_trace);
+        //attach the link to the simulator - dlm - REMOVED TO BE ATTACHED ONLY AS PART OF LARGEST CONNECTED GRAPH
+//        m_simulator.attachWithTrace(link, m_trace);
 
         //Add the link to m_links
         m_links.put(linkName, link);
+        
+        //Join both subnets and add new link
+        Set<Link> subnetA = m_nodesubnets.get(nodeA.toString());
+        Set<Link> subnetB = m_nodesubnets.get(nodeB.toString());
+        if (subnetA == null){
+        	subnetA = new HashSet<Link>();
+        	m_nodesubnets.put(nodeA.toString(), subnetA);
+        	m_subnets.add(subnetA);
+        	Set<String> membersA = new HashSet<String>();
+        	membersA.add(nodeA.toString());
+        	m_subnetMembers.add(membersA);
+        }
+        subnetA.add(link);
+        if (subnetB != subnetA){
+	        if (subnetB != null){
+	        	subnetA.addAll(subnetB);
+	        	int oldIndex = m_subnets.indexOf(subnetB);
+	        	m_subnets.remove(oldIndex);
+	        	Set<String> oldMembers = m_subnetMembers.remove(oldIndex);
+	        	
+	        	m_subnetMembers.get(m_subnets.indexOf(subnetA)).addAll(oldMembers);
+	        	for (String ip : oldMembers){
+	        		m_nodesubnets.put(ip, subnetA);
+	        	}
+	        } else {
+	        	m_nodesubnets.put(nodeB.toString(), subnetA);
+	        	m_subnetMembers.get(m_subnets.indexOf(subnetA)).add(nodeB.toString());
+	        }
+        }
 
         //And finally add route between the two.
         a.addRoute(nodeB, m_subnetMask, a2b);
@@ -249,20 +305,57 @@ public class DynamicSchedulerImpl extends UnicastRemoteObject implements Dynamic
         
         if (forwardIPs != null){
 	        for (IPAddr forwardIP : forwardIPs){
-//System.out.println(destination.toString() + "-->>" + forwardIPs.get(n).toString());
 				a.addRoute(forwardIP, m_subnetMask, a2b);
 			}
         }
         if (backwardIPs != null){
 			for (IPAddr backwardIP : backwardIPs){
-//System.out.println(source.toString() + "-->>" + forwardIPs.get(n).toString());
 				b.addRoute(backwardIP, m_subnetMask, b2a);
 			}
         }
     }
+    
+    public void attachLargestConnectedSubnet(){
+    	Set<Link> subnet = getLargestSubnet();
+    	
+    	Set<String> addedNodes = new HashSet<String>();
+    	for (Link link : subnet){
+    		Interface iiface = link.getIncomingInterface();
+    		Interface oiface = link.getOutgoingInterface();
+    		Node inode = iiface.getNode();
+    		Node onode = oiface.getNode();
+    		
+    		if (!addedNodes.contains(inode.getIPHandler().getAddress().toString())){
+    			addedNodes.add(inode.getIPHandler().getAddress().toString());
+    			m_simulator.attachWithTrace(inode, m_trace);
+    		}
+    		if (!addedNodes.contains(onode.getIPHandler().getAddress().toString())){
+    			addedNodes.add(onode.getIPHandler().getAddress().toString());
+    			m_simulator.attachWithTrace(onode, m_trace);
+    		}
+    		m_simulator.attachWithTrace(iiface, m_trace);
+    		m_simulator.attachWithTrace(oiface, m_trace);
+    		
+    		m_simulator.attachWithTrace(link, m_trace);
+    	}
+    }
 
+	private Set<Link> getLargestSubnet() {
+    	Iterator<Set<Link>> it = m_subnets.iterator();
+    	if (it.hasNext()){
+    		Set<Link> largestSubnet = it.next();
+    		while (it.hasNext()){
+    			Set<Link> current = it.next();
+    			if (current.size() > largestSubnet.size()){
+    				largestSubnet = current;
+    			}
+    		}
+    		return largestSubnet;
+    	}
+		return new HashSet<Link>();
+	}
 
-    /**
+	/**
      * This method schedules a sending of a given packet of data (an object) from
      * one node to the other. The sending is scheduled to happen at
      * (System.currentTimeMillis() - Time of start of simulator)
@@ -274,8 +367,8 @@ public class DynamicSchedulerImpl extends UnicastRemoteObject implements Dynamic
         IPAddr receiverIPAddr = new IPAddr(nodeB);
 
         // Firsy check that the two nodes exist in the simulator..
-        Node sender = (Node) m_nodes.get(senderIPAddr.toString());
-        Node receiver = (Node) m_nodes.get(receiverIPAddr.toString());
+        Node sender = m_nodes.get(senderIPAddr.toString());
+        Node receiver = m_nodes.get(receiverIPAddr.toString());
 
         if(sender == null)
         {
@@ -305,7 +398,7 @@ public class DynamicSchedulerImpl extends UnicastRemoteObject implements Dynamic
         IPAddr multicastGroup = new IPAddr(multicastGrp);
 
         // First check that the sender node exists in the simulator
-        Node sender = (Node) m_nodes.get(senderIPAddr.toString());
+        Node sender = m_nodes.get(senderIPAddr.toString());
         if(sender == null)
         {
             System.err.println("Trying to multicast a packet FROM a non-existant node: " + senderIPAddr);
@@ -332,7 +425,7 @@ public class DynamicSchedulerImpl extends UnicastRemoteObject implements Dynamic
     public byte[] receive(InetAddress receiverIPaddr) throws RemoteException
     {
         IPAddr recv = new IPAddr(receiverIPaddr);
-        Queue incoming = (Queue) m_msgQueues.get(recv.toString());
+        Queue incoming = m_msgQueues.get(recv.toString());
         IPPacket ipPacket = null;
         synchronized(incoming)
         {
@@ -442,7 +535,7 @@ public class DynamicSchedulerImpl extends UnicastRemoteObject implements Dynamic
                 IPAddr addr = ipHandler.getAddress();
 
                 //Add the packet, needs to be synchronized.
-                Queue incoming = (Queue) m_msgQueues.get(addr.toString());
+                Queue incoming = m_msgQueues.get(addr.toString());
                 synchronized(incoming)
                 {
                     incoming.pushBack(packet);

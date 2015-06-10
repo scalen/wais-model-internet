@@ -66,7 +66,7 @@ public class NetworkLoader {
 					source = destination;
 					destination = forwardIPs.poll();
 					
-					sch.addLinkInTrace(source, destination, forwardIPs, backwardIPs);
+					sch.addLinkInChain(source, destination, forwardIPs, backwardIPs);
 				}
 			}
 			

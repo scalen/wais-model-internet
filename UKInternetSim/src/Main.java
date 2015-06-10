@@ -13,6 +13,7 @@ import ukSim.utils.NetworkLoader;
 import jns.Simulator;
 import jns.dynamic.DynamicSchedulerImpl;
 import jns.element.Element;
+import jns.element.Link;
 import jns.element.Node;
 import jns.util.IPAddr;
 
@@ -22,22 +23,26 @@ public class Main {
 		DynamicSchedulerImpl sch = null;
 		try {
 			sch = NetworkLoader.loadNetworkFromLinksFile("uk-routes.txt", "baseTrace");
+			sch.attachLargestConnectedSubnet();
 			
 			Map<Integer, Collection<Node>> cardMap = new HashMap<Integer, Collection<Node>>();
+			
+			int linktotal = 0;
 			
 			Enumeration<Element> elements = Simulator.getInstance().enumerateElements();
 			if (elements.hasMoreElements()){
 				for (Element e = elements.nextElement(); elements.hasMoreElements(); e = elements.nextElement()){
 					if (e instanceof Node){
 						Node n = (Node) e;
-						Collection<Node> list;
-						if (cardMap.containsKey(n.getIPHandler().getInterfaceCount())){
-							list = cardMap.get(n.getIPHandler().getInterfaceCount());
-						} else {
+						Collection<Node> list = cardMap.get(n.getIPHandler().getInterfaceCount());;
+						if (list == null){
 							list = new ArrayList<Node>();
 							cardMap.put(n.getIPHandler().getInterfaceCount(), list);
 						}
 						list.add(n);
+					}
+					if (e instanceof Link){
+						linktotal++;
 					}
 				}
 			}
@@ -54,13 +59,17 @@ public class Main {
 					}
 				}
 			}
+			int total = 0;
 			for (int card : ss){
 				System.out.println("CARDINALITY "+ card + ", COUNT: " + cardMap.get(card).size());
+				total += cardMap.get(card).size();
 			}
+			System.out.println("TOTAL NODE COUNT: "+total);
+			System.out.println("TOTAL LINK COUNT: "+linktotal);
 			sch.start();
 			AssignProtocols ap = new AssignProtocols();
-			Node src = ap.getNodeByID("201.196.75.45");
-			Node dest = ap.getNodeByID("10.39.155.45");
+			Node src = ap.getNodeByID("79.69.103.184");
+			Node dest = ap.getNodeByID("25.111.36.231");
 			ap.sendPacket(src, dest);
 			
 		} catch (IOException e) {
